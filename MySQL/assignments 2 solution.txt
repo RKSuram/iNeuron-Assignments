@@ -1,0 +1,103 @@
+/*  ----------- ASSIGNMENT 2 -------------------------------  */
+
+
+CREATE TABLE accident(
+    accident_index VARCHAR(13),
+    accident_severity INT
+);
+
+
+CREATE TABLE vehicles(
+    accident_index VARCHAR(13),
+    vehicle_type VARCHAR(50)
+);
+
+
+CREATE TABLE vehicle_types(
+    vehicle_code INT,
+    vehicle_type VARCHAR(100)
+);
+
+
+/* Load Data */
+
+LOAD DATA INFILE 'G:/RAVI/I_Neuron/Accidents_2015.csv'
+INTO TABLE accident
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(@col1, @dummy, @dummy, @dummy, @dummy, @dummy, @col2, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy)
+SET accident_index=@col1, accident_severity=@col2;
+
+
+LOAD DATA INFILE 'G:/RAVI/I_Neuron/Vehicles_2015.csv'
+INTO TABLE vehicles
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(@col1, @dummy, @col2, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy)
+SET accident_index=@col1, vehicle_type=@col2;
+
+
+LOAD DATA INFILE 'G:/RAVI/I_Neuron/vehicle_types.csv'
+INTO TABLE vehicle_types
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES;
+
+/* -------------------------------- */
+
+/*check the loaded tables*/
+
+select * from accident;
+select * from vehicle_types;
+select * from vehicles;
+
+
+
+/* ---------Task 1. Evaluate the median severity value of accidents caused by various Motorcycles.*/
+
+select vt.vehicle_type as motorcycles_type, avg(a.accident_severity) as median_severity
+from accident a
+left join vehicles v on a.accident_index = v.accident_index
+left join vehicle_types vt on v.vehicle_type = vt.vehicle_code 
+group by 1
+having lower(motorcycles_type) like '%motorcycle%' 
+order by 1,2 ;
+
+
+
+/* ------------Task 2. Evaluate Accident Severity and Total Accidents per Vehicle Type*/
+
+select a.accident_severity, sum(distinct(v.vehicle_type)) as 'Total Accidents', vt.vehicle_type 
+from accident a
+left join vehicles v on a.accident_index = v.accident_index
+left join vehicle_types vt on vt.vehicle_code = v.vehicle_type
+group by vt.vehicle_type;
+
+
+
+/* ---------- Task 3. Calculate the Average Severity by vehicle type. ------------- */
+
+SELECT vt.vehicle_type , AVG(a.accident_severity) AS 'Average Severity'
+FROM accident a
+JOIN vehicles v ON a.accident_index = v.accident_index
+JOIN vehicle_types vt ON v.vehicle_type = vt.vehicle_code
+GROUP BY 1
+ORDER BY 2;
+
+
+
+/* ------------- Task 4. Calculate the Average Severity and Total Accidents by Motorcycle. --------- */
+
+SELECT vt.vehicle_type AS 'Vehicle Type', AVG(a.accident_severity) AS 'Average Severity', COUNT(vt.vehicle_type) AS 'Number of Accidents'
+FROM accident a
+JOIN vehicles v ON a.accident_index = v.accident_index
+JOIN vehicle_types vt ON v.vehicle_type = vt.vehicle_code
+WHERE vt.vehicle_type LIKE '%otorcycle%'
+GROUP BY 1
+ORDER BY 2,3;
+
